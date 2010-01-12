@@ -1,16 +1,16 @@
 package gem.seek
 
+import gem.seek.controls.Toast
 import gem.seek.logging.Logger
 import gem.seek.util.*
 import javafx.geometry.Pos
 import javafx.scene.Scene
 import javafx.scene.layout.StackPane
 import javafx.stage.Stage
-
-import java.util.HashMap
+import java.util.*
 
 /**
- * Seek is a library based on Android's lifecycle. A single or a group of task is encapsulated in an Activity.
+ * <p>Seek is a library based on Android's lifecycle. A single or a group of task is encapsulated in an Activity.
  * Each Activity has a lifecycle. Seek Activity lifecycle has seven (7) states: CREATED, STARTED, PAUSED, RESUMED,
  * STOPPED, DESTROYED and NOT_DEFINED. Activity's behavior depends on the logic defined on each lifecycle method. These
  * methods are the: onCreate(), onStart(), onResume(), onPause(), onStop() and onDestroy(). One of the important things
@@ -18,26 +18,26 @@ import java.util.HashMap
  * responsible for creating and launching Activity objects, thus the only thing to worry is how the Activity will behave
  * on each of its state.
 
- * onCreate() is called after Activity is created. This is the best place to instantiate fields, objects etc.
+ * <p>onCreate() is called after Activity is created. This is the best place to instantiate fields, objects etc.
 
- * onStart() is called right after onCreate(). Things like opening a database should be placed in here.
+ * <p>onStart() is called right after onCreate(). Things like opening a database should be placed in here.
 
- * onResume() is called right after onStart() or onPause(). Operations like querying database, executing tasks after
+ * <p>onResume() is called right after onStart() or onPause(). Operations like querying database, executing tasks after
  * the Activity's view is visible should be placed in here. If it is called after the onPause(), task like resuming
  * streaming, downloading etc. can be placed in here.
 
- * onPause() is called when the Activity is moved to the background, or another Activity is requested to be displayed
+ * <p>onPause() is called when the Activity is moved to the background, or another Activity is requested to be displayed
  * to the user. Tasks such as closing database, pausing downloads or streams can be placed here.
 
- * onStop() is called when the application purposely stops the Activity or the application itself. Closing the database,
+ * <p>onStop() is called when the application purposely stops the Activity or the application itself. Closing the database,
  * stopping downloads and stopping other working resources can be placed in here.
 
- * onDestroy() is called when the application is about the terminate either due to an error or the user purposely
+ * <p>onDestroy() is called when the application is about the terminate either due to an error or the user purposely
  * terminating the application. Clean up tasks such as freeing resources can be placed in here.
 
- * ---------------------------------------------------------------------------------
+ * <p>---------------------------------------------------------------------------------
 
- * The heart of this library is the SeekApplication class. The state of each Activity
+ * <p>The heart of this library is the SeekApplication class. The state of each Activity
  * is managed within the SeekApplication object. Using SeekApplication is fairly easy,
  * create SeekApplication object, then start any Activity object by calling
  * SeekApplication.startActivity() function.
@@ -45,29 +45,30 @@ import java.util.HashMap
 class SeekApplication : ApplicationContext() {
 
     private val debugName = "SeekApplication"
-
     private val minWidth = 600.0
     private val minHeight = 400.0
     private val defTitle = "Seek Application"
-
     private val logger: Logger
     private val activitiesMap = HashMap<String, Activity>()
     private val fragmentManagerMap = HashMap<String, FragmentManager>()
+    private val activityBackStack: Stack<Activity> = Stack()
     private var window: Stage? = null
-    private var root = StackPane()
-    private var mCurrentActivity: Activity? = null
+    val container = StackPane()
+    var currentActivity: Activity? = null
+    var currentToast: Toast? = null
+    var stylesheet: String? = null
 
     init {
         // initialize root view and Logger instance
-        root.alignment = Pos.CENTER
-        root.styleClass.add("container")
+        container.alignment = Pos.BOTTOM_CENTER
+        container.styleClass.add("container")
 
         // create logger
         logger = Logger(LOG_TO_FILE)
     }
 
     fun initialize(stage: Stage, windowTitle: String = defTitle, maximize: Boolean = false) {
-        initialize(stage, windowTitle, minWidth, minHeight,  maximize)
+        initialize(stage, windowTitle, minWidth, minHeight, maximize)
     }
 
     fun initialize(stage: Stage,                    // Stage window
@@ -76,25 +77,30 @@ class SeekApplication : ApplicationContext() {
                    height: Double = minHeight,     // min height of the window
                    maximize: Boolean = false) {     // maximize window or not
 
-        stage.title = windowTitle
-        stage.scene = Scene(root, width, height)
-        stage.isMaximized = maximize
+        stage.apply {
+            title = windowTitle
+            val stageScene = Scene(container, width, height)
+            stylesheet = SeekApplication::class.java.getResource("css/seekStyles.css").toExternalForm()
+            stageScene.stylesheets.add(stylesheet)
+            scene = stageScene
+            isMaximized = maximize
+        }
         window = stage
 
         // stop and destroy all fragments and activities on close
         window?.let {
-            it.setOnCloseRequest { evt ->
+            it.setOnCloseRequest { _ ->
                 if (DEBUG) logger.log(debugName, "Closing Window")
 
                 // stop and destroy all FragmentManager
-                for ((k, fragment) in fragmentManagerMap) {
+                for ((_, fragment) in fragmentManagerMap) {
                     val state = fragment.stateProperty.get()
                     if (state !== State.STOPPED) fragment.onStop()
                     if (state !== State.DESTROYED) fragment.onDestroy()
                 }
 
                 // stop and destroy all Activity
-                for ((k, activity) in activitiesMap) {
+                for ((_, activity) in activitiesMap) {
                     val state = activity.stateProperty.get()
                     if (state !== State.STOPPED) activity.onStop()
                     if (state !== State.DESTROYED) activity.onDestroy()
@@ -114,17 +120,17 @@ class SeekApplication : ApplicationContext() {
 
     override fun startActivity(activity: Class<out Activity>) {
         try {
-            val _activity: Activity?
+            val nextActivity: Activity?
             val name = activity.name
             if (activitiesMap.containsKey(name)) {
                 // if Activity already exists in map
-                _activity = activitiesMap[name]         // get Activity from map
+                nextActivity = activitiesMap[name]         // get Activity from map
             } else {
-                _activity = activity.newInstance()      // create Activity instance
-                _activity.onCreate()                    // call onCreate()
-                activitiesMap.put(name, _activity)      // put Activity to map
+                nextActivity = activity.newInstance()      // create Activity instance
+                nextActivity.onCreate()                    // call onCreate()
+                activitiesMap[name] = nextActivity      // put Activity to map
             }
-            _activity?.let { startActivity(it) }
+            nextActivity?.let { startActivity(it) }
         } catch (e: InstantiationException) {
             if (DEBUG) logger.logErr(debugName, "Error while instantiating Activity", e)
             e.printStackTrace()
@@ -137,7 +143,7 @@ class SeekApplication : ApplicationContext() {
 
     override fun startActivity(activity: Activity) {
         // pause current activity and it's fragment
-        mCurrentActivity?.let {
+        currentActivity?.let {
             if (DEBUG) logger.log(debugName, "Pausing current Activity [${it.name}]")
 
             // pause fragments first
@@ -149,7 +155,6 @@ class SeekApplication : ApplicationContext() {
                     fm.onPause()
                 }
             }
-
             // pause activity
             it.onPause()
         }
@@ -160,9 +165,20 @@ class SeekApplication : ApplicationContext() {
         if (state != State.NOT_DEFINED) {
             if (DEBUG) logger.log(debugName, "Starting Activity [${activity.name}]")
 
-            // TODO: Change layout view.
-            root.children.clear()
-            root.children.add(activity.contentView)
+            if (activity.isWindowed) {
+                if (DEBUG) logger.log(debugName, "Starting Activity as window [${activity.name}]")
+                activity.showActivityWindow()
+            } else {
+                // change application content view
+                container.children.apply {
+                    if (isEmpty()) {
+                        add(activity.root)
+                    } else {
+                        removeAt(0)
+                        add(0, activity.root)
+                    }
+                }
+            }
 
             val fm = activity.defaultFragmentManager
 
@@ -173,7 +189,7 @@ class SeekApplication : ApplicationContext() {
                 }
                 activity.onStart()
                 activity.onResume()
-                activitiesMap.put(if (activity.name != null) activity.name!! else activity.javaClass.name, activity)
+                activitiesMap[activity.name] = activity
 
                 // start at resume fragment manager
                 if (fm != null) {
@@ -191,28 +207,77 @@ class SeekApplication : ApplicationContext() {
                     fm.onStart()
                     fm.onResume()
                 }
-            }// State.STOPPED
-            // State.PAUSED
+            }
 
-            mCurrentActivity = activity
+            // try to add activity to back stack previous activity
+            if (currentActivity != null) {
+                // if empty back stack, push previous
+                if (activityBackStack.empty()) {
+                    activityBackStack.push(currentActivity)
+                    if (DEBUG) logger.log(debugName, "Pushed Activity to Stack [${currentActivity!!.name}]. " +
+                            "Stack size: ${activityBackStack.size}")
+                }
+
+                // if top activity from back stack is the next activity, pop it out
+                // this means that we are returning to the previous activity
+                else {
+                    val prevActivity = activityBackStack.peek()
+                    if (prevActivity === activity) {
+                        activityBackStack.pop()
+                        if (DEBUG) logger.log(debugName, "Returning to previous Activity. Popped Activity from " +
+                                "Stack [${activity.name}]. Stack size: ${activityBackStack.size}")
+                    }
+                }
+            }
+
+            // set current activity
+            currentActivity = activity
         } else {
             if (DEBUG) logger.log(debugName, "NOT_DEFINED Activity State found. Resuming current Activity")
-            if (mCurrentActivity != null) {
-                mCurrentActivity!!.onResume()
-                val curFm = mCurrentActivity!!.defaultFragmentManager
+            if (currentActivity != null) {
+                currentActivity!!.onResume()
+                val curFm = currentActivity!!.defaultFragmentManager
                 curFm?.onResume()
             }
         }
+    }
+
+    override fun startActivityFromParent(activity: Class<out Activity>, parentActivity: Activity) {
+        try {
+            val nextActivity: Activity?
+            val name = activity.name
+            if (activitiesMap.containsKey(name)) {
+                // if Activity already exists in map
+                nextActivity = activitiesMap[name]         // get Activity from map
+            } else {
+                nextActivity = activity.newInstance()      // create Activity instance
+                nextActivity.onCreate()                    // call onCreate()
+                nextActivity.parentActivity = parentActivity   // set parent Activity
+                activitiesMap[name] = nextActivity      // put Activity to map
+            }
+            nextActivity?.let { startActivity(it) }
+        } catch (e: InstantiationException) {
+            if (DEBUG) logger.logErr(debugName, "Error while instantiating Activity", e)
+            e.printStackTrace()
+        } catch (e: IllegalAccessException) {
+            if (DEBUG) logger.logErr(debugName, "IllegalAccessException", e)
+            e.printStackTrace()
+        }
+    }
+
+    override fun startActivityFromParent(activity: Activity, parentActivity: Activity) {
+        activity.parentActivity = parentActivity
+        startActivity(activity)
     }
 
     override fun getFragmentManager(activity: Activity): FragmentManager? {
         val fm: FragmentManager?
         val name = activity.name
         if (fragmentManagerMap.containsKey(name)) {
-            fm = fragmentManagerMap.get(name)
+            fm = fragmentManagerMap[name]
         } else {
             fm = SimpleFragmentManager(activity)
-            fragmentManagerMap.put(activity.name!!, fm)
+            fragmentManagerMap[activity.name] = fm
         }
         return fm
     }
