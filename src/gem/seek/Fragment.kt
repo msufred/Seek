@@ -18,8 +18,8 @@ abstract class Fragment : Stateful, Context {
     val stateProperty = SimpleObjectProperty(State.NOT_DEFINED)
     var activity: Activity? = null
     var contentView: Node? = null
-    var name: String? = null
-        get() = if (field == null || field!!.isEmpty()) javaClass.simpleName else field
+    var name: String = ""
+        get() = if (field.isEmpty()) javaClass.simpleName else field
 
     fun setContentView(loader: FXMLLoader?) {
         if (loader == null) throw IllegalArgumentException("FXMLLoader must not be null!")
