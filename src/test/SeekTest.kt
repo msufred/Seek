@@ -8,7 +8,7 @@ class SeekTest : Application() {
 
     override fun start(primaryStage: Stage) {
         val seekApplication = SeekApplication()
-        seekApplication.initialize(primaryStage, "Seek Test", 480.0, 720.0)
+        seekApplication.initialize(primaryStage, "Seek Test", 480.0, 500.0)
         seekApplication.startActivity(MainActivity::class.java)
         seekApplication.show()
     }

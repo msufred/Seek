@@ -14,6 +14,8 @@ class NextActivity : Activity(){
         super.onCreate()
         val loader = FXMLLoader(NextActivity::class.java.getResource("activity_next.fxml"))
         setContentView(loader)
+        showHomeEnabled = true
+        displayHomeAsUp = true
 
         backBtn.setOnAction {
             startActivity(MainActivity::class.java)
