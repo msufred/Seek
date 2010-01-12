@@ -8,7 +8,7 @@ import javafx.scene.layout.StackPane
 import java.util.*
 
 /**
- * FragmentManager objects manages Fragments and its lifecycle. FragmentManager has also its own lifecycle by which can
+ * <p>FragmentManager objects manages Fragments and its lifecycle. FragmentManager has also its own lifecycle by which can
  * only be managed by the SeekApplication object. FragmentManager's lifecycle is alive as long as the application is
  * running.
  *
@@ -22,7 +22,7 @@ abstract class FragmentManager(private val activity: Activity): Stateful {
     private val debugName = javaClass.simpleName
     private val logger: Logger = Logger(LOG_TO_FILE)
     private val fragmentsMap = HashMap<String, Fragment>()
-    private var mCurrentFragment: Fragment? = null;
+    private var mCurrentFragment: Fragment? = null
 
     val stateProperty = SimpleObjectProperty<State>(State.NOT_DEFINED)
 
@@ -85,23 +85,23 @@ abstract class FragmentManager(private val activity: Activity): Stateful {
     }
 
     override fun onStart() {
-        mCurrentFragment?.let { it.onStart() }
+        mCurrentFragment?.onStart()
         stateProperty.set(State.STARTED)
     }
 
     override fun onResume() {
-        mCurrentFragment?.let { it.onResume() }
+        mCurrentFragment?.onResume()
         stateProperty.set(State.RESUMED)
     }
 
     override fun onPause() {
-        mCurrentFragment?.let { it.onPause() }
+        mCurrentFragment?.onPause()
         stateProperty.set(State.PAUSED)
     }
 
     override fun onStop() {
         // onStop will stop all fragments
-        fragmentsMap.forEach { s, fragment ->
+        fragmentsMap.forEach { _, fragment ->
             if (fragment.stateProperty.get() != State.STOPPED
                     || fragment.stateProperty.get() != State.DESTROYED) {
                 if (DEBUG) logger.log(debugName, "Stopping Fragment [${fragment.name}]")
@@ -112,7 +112,7 @@ abstract class FragmentManager(private val activity: Activity): Stateful {
     }
 
     override fun onDestroy() {
-        fragmentsMap.forEach { s, fragment ->
+        fragmentsMap.forEach { _, fragment ->
             if (fragment.stateProperty.get() != State.DESTROYED) {
                 if (DEBUG) logger.log(debugName, "Destroying Fragment [${fragment.name}]")
                 fragment.onDestroy()
