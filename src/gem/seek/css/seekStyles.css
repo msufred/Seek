@@ -1,0 +1,45 @@
+/*
+    Created on : Jul 19, 2018
+    Author     : Gem Seeker
+================================================================================
+
+    seekStyles.css contains default styles of components
+
+================================================================================
+*/
+
+/* Seek application main container */
+.container {
+    -fx-background-color: #e9ebee;
+}
+
+
+/* Activity Default Styles */
+
+.activity_root {
+
+}
+.activity_action_bar {
+    -fx-background-color: #dbdbdb, #e9ebee;
+    -fx-background-insets: 0, 1 0 1 0
+
+}
+
+/* Toast Default Styles */
+.toast_root {
+    -fx-background-color: #000000CC;
+}
+.toast_message {
+    -fx-text-fill: white;
+}
+.toast_close_button {
+    -fx-background-color: #777;
+    -fx-background-radius: 16;
+    -fx-text-fill: #111;
+}
+.toast_close_button:hover {
+    -fx-background-color: #666;
+}
+.toast_close_button:pressed {
+    -fx-background-color: #777;
+}
