@@ -48,7 +48,7 @@ One of the important things to remember in using Seek is that Activity objects M
 
 Here's an example of how to use and start a Seek application:
 
-`
+```
 class MainActivity: Activity() {
   
   @FXML private lateinit var button: Button
@@ -64,9 +64,9 @@ class MainActivity: Activity() {
   }
   
 }
+```
 
------------------------------------------------------------------------------------
-
+```
 class SeekTest: Application() {
 
   override fun start(primaryStage: Stage) {
@@ -82,4 +82,4 @@ class SeekTest: Application() {
     }
   }
 }
-`
+```
