@@ -20,4 +20,5 @@ On each of these states, you can define custom logic operations. You can define 
 
 One of the important things to remember in using Seek is that Activity objects MUST NOT be initialized manually (ex. val activity = MyActivity()). Seek application will be responsible for creating, initializing and displaying Activity objects. Thus, we can only worry about on how the Activity will behave on each of it states. Here are some of the recommendations on what you can put in each of Activity's states.
 
-##onCreate()
+onCreate()
+  -- Called 
