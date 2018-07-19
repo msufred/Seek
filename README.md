@@ -51,35 +51,37 @@ Here's an example of how to use and start a Seek application:
 ```
 class MainActivity: Activity() {
   
-  @FXML private lateinit var button: Button
+    @FXML private lateinit var button: Button
   
-  override fun onCreate() {
-    super.onCreate()
-    val loader = FXMLLoader(MainActivity::class.java.getResource("activity_main.fxml"))
-    setContentView(loader)
+    override fun onCreate() {
+        super.onCreate()
+        val loader = FXMLLoader(MainActivity::class.java.getResource("activity_main.fxml"))
+        setContentView(loader)
     
-    button.setOnAction ({
-      println("Hello Seek World!")
-    })
-  }
-  
+        button.setOnAction ({
+            println("Hello Seek World!")
+        })
+    }
 }
 ```
 
 ```
 class SeekTest: Application() {
 
-  override fun start(primaryStage: Stage) {
-    val seekApplication = SeekApplication()
-    seekApplication.initialize(primaryStage, "Seek Test", 480.0, 720.0)
-    seekApplication.startActivity(MainActivity::class.java)
-    seekApplication.show()
-  }
-  
-  companion object {
-    @JvmStatic fun main(args: Array<String>) {
-      Application.launch(SeekTest::class.java, *args)
+    override fun start(primaryStage: Stage) {
+        val seekApplication = SeekApplication()
+        seekApplication.initialize(primaryStage, "Seek Test", 480.0, 720.0)
+        seekApplication.startActivity(MainActivity::class.java)
+        seekApplication.show()
     }
-  }
+  
+    companion object {
+        @JvmStatic fun main(args: Array<String>) {
+            Application.launch(SeekTest::class.java, *args)
+        }
+    }
 }
 ```
+
+# NOTE
+Seek is still under development. Some code might not work as expected.
