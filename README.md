@@ -83,5 +83,3 @@ class SeekTest: Application() {
 }
 ```
 
-# NOTE
-Seek is still under development. Some code might not work as expected.
